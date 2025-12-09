@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Nesting Optimizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding: 0 20px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 35px;
+            right: -50%;
+            width: 100%;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: -1;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #00C851;
+            color: white;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Upload/Draw Toggle */
+        .input-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #f8f9ff;
+            border-radius: 50px;
+            padding: 5px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            background: transparent;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Upload Section */
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 40px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-box.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Drawing Section */
+        .drawing-section {
+            display: none;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .drawing-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .drawing-controls .btn {
+            margin-top: 0;
+        }
+
+        .dimension-input {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .dimension-input input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 120px;
+        }
+
+        .dimension-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #drawing-canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: white;
+            cursor: crosshair;
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .shapes-list {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .shape-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .shape-item:last-child {
+            border-bottom: none;
+        }
+
+        .shape-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #00C851;
+        }
+
+        .btn-warning {
+            background: #ffbb33;
+        }
+
+        .btn-info {
+            background: #33b5e5;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+        }
+
+        /* NEW: Approval toggle styles */
+        .approval-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #00C851;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .part-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .results-section, .config-section, .nesting-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .image-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .image-box {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .image-box img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .part-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .part-card.approved {
+            border-color: #00C851;
+            background: #f8fff8;
+        }
+
+        .part-card.rejected {
+            border-color: #ff4444;
+            background: #fff8f8;
+            opacity: 0.6;
+        }
+
+        .part-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .part-card img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .part-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .part-info strong {
+            color: #333;
+        }
+
+        .config-form {
+            background: #f8f9ff;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        /* Grid styles */
+.canvas-with-grid {
+    background-image: 
+        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.grid-active {
+    background-color: #f8f9ff !important;
+}
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #888;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success {
+            background: #00C851;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .nesting-result {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .nesting-image {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .image-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .parts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step-indicator {
+                flex-direction: column;
+            }
+
+            .step::after {
+                display: none;
+            }
+
+            .dimension-input {
+                flex-direction: column;
+            }
+
+            .drawing-controls {
+                flex-direction: column;
+            }
+
+            .part-actions {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧵 Eco-Nesting Optimizer</h1>
+            <p>Upload garment patterns or draw shapes, detect parts, and optimize fabric placement</p>
+        </div>
+
+        <div class="content">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Input Method</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Configure Fabric</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Optimize Nesting</div>
+                </div>
+            </div>
+
+            <!-- Input Method Toggle -->
+            <div class="input-toggle">
+                <button class="toggle-btn active" id="uploadToggle">Upload Image</button>
+                <button class="toggle-btn" id="drawToggle">Draw Shapes</button>
+            </div>
+
+            <!-- Step 1: Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Click to upload or drag & drop</div>
+                    <div class="upload-hint">Supports JPG, JPEG, PNG (max 16MB)</div>
+                    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png">
+                    <button class="btn" id="uploadBtn" style="display: none;">Process Image</button>
+                </div>
+            </div>
+
+            <!-- Step 1: Drawing Section -->
+            <div class="drawing-section" id="drawingSection">
+                <div class="drawing-controls">
+                    <button class="btn btn-success" id="start-drawing">Start Drawing</button>
+                    <button class="btn btn-primary" id="finish-shape" disabled>Finish Shape</button>
+                    <button class="btn btn-warning" id="clear-canvas">Clear All</button>
+                    <button class="btn btn-secondary" id="undo-last">Undo Last</button>
+                    <button class="btn btn-info" id="toggle-grid">Show Grid</button> <!-- NEW GRID BUTTON -->
+                </div>
+                
+                <div class="dimension-input">
+    <label><strong>Real Dimensions (cm):</strong></label>
+    <input type="number" id="real-width" placeholder="Width" min="1" step="0.1" value="30"> <!-- Changed from 10 to 30 -->
+    <input type="number" id="real-height" placeholder="Height" min="1" step="0.1" value="40"> <!-- Changed from 10 to 40 -->
+    <input type="text" id="shape-label" placeholder="Part Label" value="Part 1">
+    <button class="btn btn-info" id="set-dimensions">Set Dimensions</button>
+</div>
+                
+                <canvas id="drawing-canvas" width="800" height="500"></canvas>
+                
+                <div class="shapes-list">
+                    <h4>Drawn Shapes:</h4>
+                    <div id="shapes-container"></div>
+                </div>
+                
+                <button class="btn" id="process-drawn">Process Drawn Shapes</button>
+            </div>
+
+            <div class="error" id="errorMsg"></div>
+            <div class="success" id="successMsg"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p id="loadingText">Processing image and detecting cut parts...</p>
+            </div>
+
+            <!-- Step 2: Detection Results -->
+            <div class="results-section" id="results">
+                <div class="stats" id="stats"></div>
+
+                <div class="image-display">
+                    <div class="image-box">
+                        <h3>Original Image</h3>
+                        <img id="originalImg" src="" alt="Original">
+                    </div>
+                    <div class="image-box">
+                        <h3>Detected Parts</h3>
+                        <img id="visualizationImg" src="" alt="Visualization">
+                    </div>
+                </div>
+
+                <h2 style="color: #667eea; margin-bottom: 20px;">Detected Cut Parts</h2>
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <p style="color: #666;">Toggle parts to include/exclude from nesting optimization</p>
+                </div>
+                <div class="parts-grid" id="partsGrid"></div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn" id="continueBtn">Continue to Fabric Configuration →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Fabric Configuration -->
+            <div class="config-section" id="configSection">
+                <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">Configure Fabric & Scale</h2>
+                
+                <div class="config-form">
+                    <div class="form-group">
+                        <label>Fabric Width (cm)</label>
+                        <input type="number" id="fabricWidth" step="0.1" min="1" value="150" required>
+                        <small>Enter the width of your fabric roll in centimeters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fabric Height (cm)</label>
+                        <input type="number" id="fabricHeight" step="0.1" min="1" value="200" required>
+                        <small>Enter the height/length of your fabric in centimeters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Scale Factor (1 pixel = ___ cm)</label>
+                        <input type="number" id="scaleFactor" step="0.001" min="0.001" value="0.1" required>
+                        <small>How many cm does 1 pixel represent? Example: If 10 pixels = 1cm, enter 0.1</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" id="backBtn">← Back</button>
+                        <button class="btn" id="optimizeBtn">Optimize Nesting 🚀</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Nesting Results -->
+            <div class="nesting-section" id="nestingSection">
+                <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">Optimized Nesting Layout</h2>
+                
+                <div class="nesting-result">
+                    <img id="nestingImg" class="nesting-image" src="" alt="Nesting Layout">
+                    
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Statistics</h3>
+                    <div class="stats-grid" id="statsGrid"></div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" id="newUploadBtn">Start Over 🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Drawing functionality variables
+        let isDrawing = false;
+        let currentShape = [];
+        let drawnShapes = [];
+        let canvas, ctx;
+
+        // App functionality variables
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const results = document.getElementById('results');
+        const configSection = document.getElementById('configSection');
+        const nestingSection = document.getElementById('nestingSection');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        let selectedFile = null;
+        let detectedParts = [];
+        let sessionId = null;
+
+        // Initialize drawing canvas
+        function initDrawingCanvas() {
+            canvas = document.getElementById('drawing-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Initialize canvas with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            // Event listeners for drawing
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouchStart);
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    // If this is the first point of a new shape, start fresh
+    if (currentShape.length === 0) {
+        currentShape = [{x, y}];
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    } else {
+        // Continue drawing from current position
+        currentShape.push({x, y});
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+    
+    isDrawing = true;
+    document.getElementById('finish-shape').disabled = false;
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!isDrawing) return;
+    
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    
+    currentShape.push({x, y});
+}
+
+        function startDrawing(e) {
+    // Always start drawing when mouse is clicked on canvas
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // If this is the first point of a new shape, start fresh
+    if (currentShape.length === 0) {
+        currentShape = [{x, y}];
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    } else {
+        // Continue drawing from current position
+        currentShape.push({x, y});
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+    
+    isDrawing = true;
+    document.getElementById('finish-shape').disabled = false;
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    
+    currentShape.push({x, y});
+}
+function stopDrawing() {
+    // Just stop drawing without finishing the shape
+    isDrawing = false;
+}
+
+function finishShape() {
+    if (currentShape.length < 3) {
+        alert('Shape must have at least 3 points');
+        return;
+    }
+    
+    // Close the shape
+    const firstPoint = currentShape[0];
+    ctx.lineTo(firstPoint.x, firstPoint.y);
+    ctx.stroke();
+    
+    // Add to shapes list
+    const shapeId = drawnShapes.length + 1;
+    const label = document.getElementById('shape-label').value || `Part ${shapeId}`;
+    const realWidth = parseFloat(document.getElementById('real-width').value) || 10;
+    const realHeight = parseFloat(document.getElementById('real-height').value) || 10;
+    
+    drawnShapes.push({
+        id: shapeId,
+        label: label,
+        path: [...currentShape],
+        real_width: realWidth,
+        real_height: realHeight
+    });
+    
+    updateShapesList();
+    
+    // Clear canvas for next drawing
+    clearCanvasForNext();
+    
+    // Show success message
+    successMsg.textContent = `Shape "${label}" saved! You can now draw the next piece.`;
+    successMsg.style.display = 'block';
+    setTimeout(() => successMsg.style.display = 'none', 3000);
+}
+
+// NEW FUNCTION: Clear canvas for next drawing but keep shapes list
+function clearCanvasForNext() {
+    currentShape = [];
+    isDrawing = false;
+    document.getElementById('finish-shape').disabled = true;
+    
+    // Clear the canvas but don't clear the drawnShapes array
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Update label for next shape
+    document.getElementById('shape-label').value = `Part ${drawnShapes.length + 1}`;
+}   
+
+        function updateShapesList() {
+            const container = document.getElementById('shapes-container');
+            container.innerHTML = '';
+            
+            drawnShapes.forEach((shape, index) => {
+                const shapeItem = document.createElement('div');
+                shapeItem.className = 'shape-item';
+                shapeItem.innerHTML = `
+                    <div>
+                        <strong>${shape.label}</strong><br>
+                        <small>${shape.real_width}cm × ${shape.real_height}cm</small>
+                    </div>
+                    <div class="shape-actions">
+                        <button class="btn btn-small btn-danger" onclick="deleteShape(${index})">Delete</button>
+                    </div>
+                `;
+                container.appendChild(shapeItem);
+            });
+        }
+
+        function deleteShape(index) {
+            drawnShapes.splice(index, 1);
+            redrawAllShapes();
+            updateShapesList();
+        }
+
+// Grid functionality
+let gridEnabled = false;
+
+function toggleGrid() {
+    gridEnabled = !gridEnabled;
+    const gridBtn = document.getElementById('toggle-grid');
+    const canvas = document.getElementById('drawing-canvas');
+    
+    if (gridEnabled) {
+        canvas.classList.add('canvas-with-grid', 'grid-active');
+        gridBtn.textContent = 'Hide Grid';
+        gridBtn.classList.add('btn-success');
+        gridBtn.classList.remove('btn-info');
+    } else {
+        canvas.classList.remove('canvas-with-grid', 'grid-active');
+        gridBtn.textContent = 'Show Grid';
+        gridBtn.classList.add('btn-info');
+        gridBtn.classList.remove('btn-success');
+    }
+    
+    // Redraw all shapes to maintain visibility
+    redrawAllShapes();
+}
+
+// Update redrawAllShapes to handle grid
+function redrawAllShapes() {
+    // Clear canvas
+    if (gridEnabled) {
+        // If grid is enabled, just clear the drawing but keep grid background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+        // If no grid, clear with white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Redraw all shapes
+    drawnShapes.forEach(shape => {
+        if (shape.path.length === 0) return;
+        
+        ctx.beginPath();
+        ctx.moveTo(shape.path[0].x, shape.path[0].y);
+        
+        for (let i = 1; i < shape.path.length; i++) {
+            ctx.lineTo(shape.path[i].x, shape.path[i].y);
+        }
+        
+        // Close the shape
+        ctx.lineTo(shape.path[0].x, shape.path[0].y);
+        ctx.stroke();
+    });
+}
+
+// Add event listener for grid toggle
+document.getElementById('toggle-grid').addEventListener('click', toggleGrid);
+
+        function clearCanvas() {
+    drawnShapes = [];
+    currentShape = [];
+    isDrawing = false;
+    document.getElementById('finish-shape').disabled = true;
+    
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    updateShapesList();
+    document.getElementById('shape-label').value = 'Part 1';
+    
+    successMsg.textContent = 'All shapes cleared!';
+    successMsg.style.display = 'block';
+    setTimeout(() => successMsg.style.display = 'none', 3000);
+}
+
+        function undoLast() {
+            if (drawnShapes.length > 0) {
+                drawnShapes.pop();
+                redrawAllShapes();
+                updateShapesList();
+                document.getElementById('shape-label').value = `Part ${drawnShapes.length + 1}`;
+            }
+        }
+
+        // NEW: Toggle part approval
+        function togglePartApproval(partId) {
+            const part = detectedParts.find(p => p.id === partId);
+            if (part) {
+                part.approved = !part.approved;
+                
+                // Update card appearance
+                const card = document.querySelector(`[data-part-id="${partId}"]`);
+                if (card) {
+                    card.classList.remove('approved', 'rejected');
+                    if (part.approved) {
+                        card.classList.add('approved');
+                    } else {
+                        card.classList.add('rejected');
+                    }
+                }
+                
+                updateApprovalStats();
+            }
+        }
+
+        // NEW: Update approval statistics
+        function updateApprovalStats() {
+            const totalParts = detectedParts.length;
+            const approvedParts = detectedParts.filter(p => p.approved).length;
+            
+            const statsElement = document.getElementById('stats');
+            if (statsElement) {
+                statsElement.innerHTML = `
+                    <h3>${totalParts} Cut Parts Detected</h3>
+                    <p>${approvedParts} parts selected for nesting | ${totalParts - approvedParts} excluded</p>
+                `;
+            }
+        }
+
+        // Step management
+        function setStep(stepNum) {
+            ['step1', 'step2', 'step3'].forEach((id, idx) => {
+                const step = document.getElementById(id);
+                step.classList.remove('active', 'completed');
+                if (idx + 1 < stepNum) step.classList.add('completed');
+                if (idx + 1 === stepNum) step.classList.add('active');
+            });
+        }
+
+        // Toggle between upload and draw
+        document.getElementById('uploadToggle').addEventListener('click', function() {
+            this.classList.add('active');
+            document.getElementById('drawToggle').classList.remove('active');
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('drawingSection').style.display = 'none';
+        });
+
+        document.getElementById('drawToggle').addEventListener('click', function() {
+            this.classList.add('active');
+            document.getElementById('uploadToggle').classList.remove('active');
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('drawingSection').style.display = 'block';
+        });
+
+        // Drawing controls
+        document.getElementById('start-drawing').addEventListener('click', function() {
+            isDrawing = true;
+            document.getElementById('finish-shape').disabled = false;
+            currentShape = [];
+        });
+
+        document.getElementById('finish-shape').addEventListener('click', finishShape);
+        document.getElementById('clear-canvas').addEventListener('click', clearCanvas);
+        document.getElementById('undo-last').addEventListener('click', undoLast);
+        document.getElementById('set-dimensions').addEventListener('click', function() {
+            // Just update the current shape dimensions
+            successMsg.textContent = 'Dimensions updated for next shape';
+            successMsg.style.display = 'block';
+            setTimeout(() => successMsg.style.display = 'none', 3000);
+        });
+
+        // Process drawn shapes
+        document.getElementById('process-drawn').addEventListener('click', async function() {
+            if (drawnShapes.length === 0) {
+                errorMsg.textContent = 'Please draw at least one shape';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            loading.style.display = 'block';
+            loadingText.textContent = 'Processing drawn shapes...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const response = await fetch('/process-drawn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shapes: drawnShapes })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (response.ok && data.success) {
+                    successMsg.textContent = `Successfully processed ${data.parts_count} shapes!`;
+                    successMsg.style.display = 'block';
+
+                    detectedParts = data.parts;
+                    sessionId = data.session_id;
+
+                    document.getElementById('stats').innerHTML = `
+                        <h3>${data.parts_count} Shapes Processed</h3>
+                        <p>Ready for nesting optimization</p>
+                    `;
+
+                    if (data.visualization) {
+                        document.getElementById('originalImg').style.display = 'none';
+                        document.getElementById('visualizationImg').src = data.visualization;
+                    }
+
+                    const partsGrid = document.getElementById('partsGrid');
+                    partsGrid.innerHTML = '';
+
+                    data.parts.forEach(part => {
+                        const card = document.createElement('div');
+                        card.className = 'part-card approved';
+                        card.setAttribute('data-part-id', part.id);
+                        card.innerHTML = `
+                            <img src="${part.image_url}" alt="${part.label}">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">${part.label}</h4>
+                            <div class="part-info">
+                                <p><strong>Width:</strong> ${part.width}px</p>
+                                <p><strong>Height:</strong> ${part.height}px</p>
+                                <p><strong>Area:</strong> ${part.area}px²</p>
+                                <p><strong>Real Size:</strong> ${part.real_width || part.width} × ${part.real_height || part.height} cm</p>
+                            </div>
+                            <div class="part-actions">
+                                <div class="approval-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked onchange="togglePartApproval(${part.id})">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">Include in nesting</span>
+                                </div>
+                            </div>
+                        `;
+                        partsGrid.appendChild(card);
+                    });
+
+                    document.getElementById('drawingSection').style.display = 'none';
+                    results.style.display = 'block';
+                    setStep(1);
+                    results.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    errorMsg.textContent = data.error || 'Processing failed';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMsg.textContent = 'Network error: ' + error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Click to upload
+        uploadBox.addEventListener('click', () => fileInput.click());
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                uploadBox.querySelector('.upload-text').textContent = selectedFile.name;
+                uploadBtn.style.display = 'inline-block';
+            }
+        });
+
+        // Drag and drop
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                selectedFile = e.dataTransfer.files[0];
+                fileInput.files = e.dataTransfer.files;
+                uploadBox.querySelector('.upload-text').textContent = selectedFile.name;
+                uploadBtn.style.display = 'inline-block';
+            }
+        });
+
+        // Upload and process
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            results.style.display = 'none';
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            loading.style.display = 'block';
+            loadingText.textContent = 'Processing image and detecting cut parts...';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (response.ok && data.success) {
+                    successMsg.textContent = `Successfully detected ${data.parts_count} cut parts!`;
+                    successMsg.style.display = 'block';
+
+                    detectedParts = data.parts;
+                    sessionId = data.session_id;
+
+                    document.getElementById('stats').innerHTML = `
+                        <h3>${data.parts_count} Cut Parts Detected</h3>
+                        <p>Ready for nesting optimization</p>
+                    `;
+
+                    document.getElementById('originalImg').src = data.original_image;
+                    document.getElementById('visualizationImg').src = data.visualization;
+
+                    const partsGrid = document.getElementById('partsGrid');
+                    partsGrid.innerHTML = '';
+
+                    data.parts.forEach(part => {
+                        const card = document.createElement('div');
+                        card.className = 'part-card approved';
+                        card.setAttribute('data-part-id', part.id);
+                        card.innerHTML = `
+                            <img src="${part.image_url}" alt="${part.label}">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">${part.label}</h4>
+                            <div class="part-info">
+                                <p><strong>Width:</strong> ${part.width}px</p>
+                                <p><strong>Height:</strong> ${part.height}px</p>
+                                <p><strong>Area:</strong> ${part.area}px²</p>
+                            </div>
+                            <div class="part-actions">
+                                <div class="approval-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked onchange="togglePartApproval(${part.id})">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label">Include in nesting</span>
+                                </div>
+                            </div>
+                        `;
+                        partsGrid.appendChild(card);
+                    });
+
+                    updateApprovalStats();
+                    results.style.display = 'block';
+                    setStep(1);
+                    results.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    errorMsg.textContent = data.error || 'Processing failed';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMsg.textContent = 'Network error: ' + error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Continue to configuration
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            // Filter out unapproved parts
+            const approvedParts = detectedParts.filter(part => part.approved);
+            
+            if (approvedParts.length === 0) {
+                errorMsg.textContent = 'Please select at least one part to include in nesting';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            results.style.display = 'none';
+            configSection.style.display = 'block';
+            setStep(2);
+            configSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Back button
+        document.getElementById('backBtn').addEventListener('click', () => {
+            configSection.style.display = 'none';
+            results.style.display = 'block';
+            setStep(1);
+            results.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Optimize nesting
+        document.getElementById('optimizeBtn').addEventListener('click', async () => {
+            const fabricWidth = parseFloat(document.getElementById('fabricWidth').value);
+            const fabricHeight = parseFloat(document.getElementById('fabricHeight').value);
+            const scaleFactor = parseFloat(document.getElementById('scaleFactor').value);
+
+            if (!fabricWidth || !fabricHeight || !scaleFactor) {
+                errorMsg.textContent = 'Please fill in all fields';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Filter out unapproved parts
+            const approvedParts = detectedParts.filter(part => part.approved);
+            
+            if (approvedParts.length === 0) {
+                errorMsg.textContent = 'Please select at least one part to include in nesting';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            configSection.style.display = 'none';
+            loading.style.display = 'block';
+            loadingText.textContent = 'Running genetic algorithm to optimize placement...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const response = await fetch('/optimize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fabric_width: fabricWidth,
+                        fabric_height: fabricHeight,
+                        scale_factor: scaleFactor,
+                        parts: approvedParts, // Only send approved parts
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (response.ok && data.success) {
+                    document.getElementById('nestingImg').src = data.nesting_image;
+
+                    const stats = data.statistics;
+                    const statsGrid = document.getElementById('statsGrid');
+                    statsGrid.innerHTML = `
+    <style>
+        .stat-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 15px 18px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: 0.3s ease;
+            border: 1px solid #eaeaea;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2b6cb0;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+    </style>
+
+    <div class="stat-container">
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.utilization}%</div>
+            <div class="stat-label">Utilization</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.efficiency}%</div>
+            <div class="stat-label">Efficiency</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.waste_percentage}%</div>
+            <div class="stat-label">Waste</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.total_parts_area}</div>
+            <div class="stat-label">Total Parts Area (cm²)</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.used_fabric_area}</div>
+            <div class="stat-label">Used Fabric Area (cm²)</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-value">${stats.fabric_usage}%</div>
+            <div class="stat-label">Fabric Usage</div>
+        </div>
+
+    </div>
+`;
+
+
+                    nestingSection.style.display = 'block';
+                    setStep(3);
+                    nestingSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    errorMsg.textContent = data.error || 'Optimization failed. Try adjusting fabric size or scale factor.';
+                    errorMsg.style.display = 'block';
+                    configSection.style.display = 'block';
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMsg.textContent = 'Network error: ' + error.message;
+                errorMsg.style.display = 'block';
+                configSection.style.display = 'block';
+            }
+        });
+
+        // New upload
+        document.getElementById('newUploadBtn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initDrawingCanvas();
+        });
+    </script>
+</body>
+</html>
