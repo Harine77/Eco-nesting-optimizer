@@ -200,52 +200,55 @@ Visualize Optimized Layout
 Download/Export Results
 ```
 
-## 📊 Database Schema
-```sql
--- Users Table
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(120) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role VARCHAR(20) DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+## 🧮 Database Schema
 
--- Projects Table
-CREATE TABLE projects (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Sessions Table
-CREATE TABLE sessions (
-    id SERIAL PRIMARY KEY,
-    session_uuid VARCHAR(100) UNIQUE NOT NULL,
-    project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-    source_type VARCHAR(20),
-    original_image_path TEXT,
-    visualization_image_path TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Cut Parts Table
-CREATE TABLE cut_parts (
-    id SERIAL PRIMARY KEY,
-    session_id INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
-    part_label VARCHAR(50),
-    width FLOAT NOT NULL,
-    height FLOAT NOT NULL,
-    area FLOAT NOT NULL,
-    real_width FLOAT,
-    real_height FLOAT,
-    image_path TEXT,
-    approved BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+<div align="center">
+```mermaid
+erDiagram
+    USERS ||--o{ PROJECTS : owns
+    PROJECTS ||--o{ SESSIONS : contains
+    SESSIONS ||--o{ CUT_PARTS : has
+    
+    USERS {
+        int id PK
+        string email UK
+        string password_hash
+        string role
+        datetime created_at
+    }
+    
+    PROJECTS {
+        int id PK
+        int user_id FK
+        string name
+        text description
+        datetime created_at
+    }
+    
+    SESSIONS {
+        int id PK
+        string session_uuid UK
+        int project_id FK
+        string source_type
+        text image_path
+        datetime created_at
+    }
+    
+    CUT_PARTS {
+        int id PK
+        int session_id FK
+        string label
+        float width
+        float height
+        float area
+        boolean approved
+        datetime created_at
+    }
 ```
+
+</div>
+
+---
 
 ### Relationships
 - One User → Many Projects
